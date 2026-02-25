@@ -62,10 +62,24 @@ searchBtn.addEventListener('click', async () => {
             });
         });
         //취약 
-        const week = []
+        const weak = []
         //저항
-        const resis = []
+        const resist = []
 
+        //객체를 배열로 수정
+        //반복문을 통해 
+        for (const [type, num] of Object.entries(damageSum)){
+            if(num >1){
+                weak.push(`${type}`)
+            }
+            if(num < 1 ){
+                resist.push(`${type}`)
+            }
+            
+
+        }
+        resisttype.textContent = `저항 - ${resist.join(', ')}`;
+        weaktype.textContent = `취약 - ${weak.join(', ')}`;
 
     } catch (error) {
         alert('포켓몬을 찾을 수 없습니다!');
