@@ -29,7 +29,43 @@ searchBtn.addEventListener('click', async () => {
         usertype.textContent = typeName.join(' ');
 
         // 포켓몬 상성
+        const typeURLs = data.types.map(item => item.type.url);
+
+        //상성 가져오기
+        const typeResponse = await Promise.all(typeURLs.map(url => fetch(url)))
+        const typeData = await Promise.all(typeResponse.map(res => res.json()))
+
+        //배울을 담을 딕셔너리 생성
+        const damageSum = {}; 
+
+
+        typeData.forEach(Intype => {
+            // 데미지 검사하는 로직
+            const damage_cal = Intype.damage_relations;
+
+            // 데미지 X2
+            // damageSum에 아무것도 없으면 1이 곱해지고
+            // 안에 있으면 안에 있는 내용에서 곱해짐
+            damage_cal.double_damage_from.forEach(t => {
+                // 이미 바구니에 점수가 있으면 곱하고, 없으면 1에다가 2를 곱함
+                damageSum[t.name] = (damageSum[t.name] || 1) * 2;
+            });
+
+            // 데미지 X0.5
+            damage_cal.half_damage_from.forEach(t => {
+                damageSum[t.name] = (damageSum[t.name] || 1) * 0.5;
+            });
+
+            // 노데미지
+            damage_cal.no_damage_from.forEach(t => {
+                damageSum[t.name] = 0; // 무효는 무조건 0!
+            });
+        });
         
+        //취약 
+        const week = []
+        //저항
+        const resis = []
 
     } catch (error) {
         alert('포켓몬을 찾을 수 없습니다!');
