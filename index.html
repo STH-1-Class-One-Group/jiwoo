@@ -1,28 +1,99 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>포켓몬</title>
-    <link rel="stylesheet" href="style.css">
+    <title>PokéMatch - 포켓몬 상성 검색기</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Google Fonts: Inter and Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="search-box">
-        <input type="text" id="pokemon-search" placeholder="포켓몬 이름을 입력하세요.">
-        <button id="search-btn">검색</button>
+    <div class="app-container">
+        <!-- 배경 장식 요소들 -->
+        <div class="bg-blur blur-1"></div>
+        <div class="bg-blur blur-2"></div>
+
+        <header>
+            <!-- <div class="lang-selector">
+                <button id="lang-ko" class="lang-btn active">한국어</button>
+                <button id="lang-en" class="lang-btn">English</button>
+            </div> -->
+            <h1 class="main-title">PokéMatch</h1>
+            <p id="app-subtitle" class="subtitle">Search by name or number to check type matchups.</p>
+        </header>
+
+        <main>
+            <section class="search-section">
+                <div class="search-box">
+                    <input type="text" id="pokemon-search" placeholder="Pokémon name or ID..." spellcheck="false">
+                    <button id="search-btn">Search</button>
+                </div>
+            </section>
+
+            <section id="result-container" class="result-container hidden">
+                <!-- 결과가 여기에 동적으로 렌더링됩니다 -->
+                <div class="pokemon-info-card glass">
+                    <div class="pokemon-image-wrapper">
+                        <img id="pokemon-sprite" src="" alt="Pokémon sprite">
+                    </div>
+                    <div class="pokemon-details">
+                        <span id="pokemon-id" class="poke-id">#000</span>
+                        <h2 id="pokemon-name" class="poke-name">Pokémon Name</h2>
+                        <div id="pokemon-types" class="type-badge-container">
+                            <!-- 타입 배지 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="effectiveness-grid">
+                    <div class="effectiveness-card glass" id="weak-from">
+                        <h3 id="title-weak-from">Weaknesses (Higher Damage Taken)</h3>
+                        <div class="type-grid" id="weakness-list"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="weak-to">
+                        <h3 id="title-weak-to">Weaknesses (Higher Damage Given)</h3>
+                        <div class="type-grid" id="weakness-list-to"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="resistant-from">
+                        <h3 id="title-resist-from">Resistances (Lower Damage Taken)</h3>
+                        <div class="type-grid" id="resistance-list"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="resistant-to">
+                        <h3 id="title-resist-to">Resistances (Lower Damage Given)</h3>
+                        <div class="type-grid" id="resistance-list-to"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="immune-from">
+                        <h3 id="title-immune">Immunities (No Damage Taken)</h3>
+                        <div class="type-grid" id="immunity-list"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="immune-to">
+                        <h3 id="title-immune-given">Immunities (No Damage Given)</h3>
+                        <div class="type-grid" id="immunity-list-given"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="loading-spinner" class="spinner-container hidden">
+                <div class="spinner"></div>
+                <p>포켓몬 데이터를 불러오는 중...</p>
+            </section>
+
+            <section id="error-message" class="error-container hidden">
+                <p>포켓몬을 찾을 수 없습니다. 철자를 확인해 주세요.</p>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 PokéMatch. Data from <a href="https://pokeapi.co/" target="_blank">PokéAPI</a></p>
+        </footer>
     </div>
 
-    <div id="pokemon-info">
-        <!-- 포켓몬 정보가 여기에 표시됩니다. -->
-        <!-- 이미지 -->
-        <img src="" alt="">
-        <!-- 이름 -->
-        <h2></h2>
-
-    <script src="async.js"></script>
-    <!-- <script src="promise.js"></script> -->
-    <!-- <script src="async.js"></script> -->
+    <script src="js/script.js"></script>
 </body>
 
 </html>
