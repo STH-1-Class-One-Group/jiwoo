@@ -1,3 +1,8 @@
+const searchBtn = document.getElementById('search-btn');
+const input = document.getElementById('pokemon-search');
+const pokemonName = document.querySelector('h2');
+const pokemonImg = document.querySelector('img');
+
 searchBtn.addEventListener('click', async () => {
     const name = input.value.toLowerCase();
 
