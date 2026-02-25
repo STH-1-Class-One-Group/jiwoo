@@ -61,11 +61,11 @@ searchBtn.addEventListener('click', async () => {
                 damageSum[t.name] = 0; // 무효는 무조건 0!
             });
         });
-        
         //취약 
         const week = []
         //저항
         const resis = []
+
 
     } catch (error) {
         alert('포켓몬을 찾을 수 없습니다!');
