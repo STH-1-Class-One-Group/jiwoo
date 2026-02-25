@@ -115,25 +115,3 @@ searchBtn.addEventListener('click', searchPokemon);
 searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') searchPokemon();
 });
-
-
-
-
-
-// searchBtn.addEventListener('click', async () => {
-//     const name = searchInput.value.toLowerCase();
-
-//     try {
-//         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
-//         if (!response.ok) throw new Error();
-
-//         const data = await response.json();
-        
-//         pokeName.textContent = data.name.toUpperCase();
-//         pokeSprite.src = data.sprites.front_default;
-//     } catch (error) {
-//         alert('포켓몬을 찾을 수 없습니다!');
-//     }
-// });
-
-
