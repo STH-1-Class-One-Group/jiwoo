@@ -156,6 +156,10 @@ async function calculateTypeEffectiveness(data) {
  */
 function displayEffectiveness(containerId, multipliers, filterFn) {
     const container = document.getElementById(containerId);
+    
+    // [추가] 만약 해당 ID를 가진 HTML 요소가 없으면 함수를 종료해라!
+    if (!container) return; 
+    
     container.innerHTML = ''; // 기존 내용 초기화
 
     // 객체의 [키, 값] 쌍을 배열로 변환하여 순회합니다.
