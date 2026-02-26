@@ -273,17 +273,30 @@ header {
 }
 
 /* 상성 그리드 */
-.effectiveness-grid {
+.matchup-section {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
+}
+
+.matchup-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-light);
+}
+
+.effectiveness-grid {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .effectiveness-card {
     padding: 1.5rem;
 }
 
-.effectiveness-card h3 {
+.effectiveness-card h4 {
     font-size: 1.1rem;
     margin-bottom: 1.5rem;
     color: var(--text-muted);

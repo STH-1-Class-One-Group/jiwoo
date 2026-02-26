@@ -50,32 +50,44 @@
                     </div>
                 </div>
 
-                <div class="effectiveness-grid">
-                    <div class="effectiveness-card glass" id="weak-from">
-                        <h3 id="title-weak-from">Weaknesses (Higher Damage Taken)</h3>
-                        <div class="type-grid" id="weakness-list"></div>
+                <div class="matchup-section">
+                    <div class="matchup-wrapper">
+                        <h3>Defending Type Effectiveness</h3>
+                        <div class="effectiveness-grid">
+                            <div class="effectiveness-card glass" id="weak-from">
+                                <h4 id="title-weak-from">Higher Damage Taken</h3>
+                                <div class="type-grid" id="weakness-list"></div>
+                            </div>
+                            <div class="effectiveness-card glass" id="resistant-from">
+                                <h4 id="title-resist-from">Lower Damage Taken</h3>
+                                <div class="type-grid" id="resistance-list"></div>
+                            </div>
+                            <div class="effectiveness-card glass" id="immune-from">
+                                <h4 id="title-immune-from">No Damage Taken</h3>
+                                <div class="type-grid" id="immunity-list"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="effectiveness-card glass" id="weak-to">
-                        <h3 id="title-weak-to">Weaknesses (Higher Damage Given)</h3>
-                        <div class="type-grid" id="weakness-list-to"></div>
-                    </div>
-                    <div class="effectiveness-card glass" id="resistant-from">
-                        <h3 id="title-resist-from">Resistances (Lower Damage Taken)</h3>
-                        <div class="type-grid" id="resistance-list"></div>
-                    </div>
-                    <div class="effectiveness-card glass" id="resistant-to">
-                        <h3 id="title-resist-to">Resistances (Lower Damage Given)</h3>
-                        <div class="type-grid" id="resistance-list-to"></div>
-                    </div>
-                    <div class="effectiveness-card glass" id="immune-from">
-                        <h3 id="title-immune">Immunities (No Damage Taken)</h3>
-                        <div class="type-grid" id="immunity-list"></div>
-                    </div>
-                    <div class="effectiveness-card glass" id="immune-to">
-                        <h3 id="title-immune-given">Immunities (No Damage Given)</h3>
-                        <div class="type-grid" id="immunity-list-given"></div>
+                    
+                    <div class="matchup-wrapper">
+                        <h3>Attacking Type Effectiveness</h3>
+                        <div class="effectiveness-grid">
+                            <div class="effectiveness-card glass" id="weak-to">
+                                <h4 id="title-weak-to">Higher Damage Given</h3>
+                                <div class="type-grid" id="weakness-list-to"></div>
+                            </div>
+                            <div class="effectiveness-card glass" id="resistant-to">
+                                <h4 id="title-resist-to">Lower Damage Given</h3>
+                                <div class="type-grid" id="resistance-list-to"></div>
+                            </div>
+                            <div class="effectiveness-card glass" id="immune-to">
+                                <h4 id="title-immune-to">No Damage Given</h3>
+                                <div class="type-grid" id="immunity-list-given"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </section>
 
             <section id="loading-spinner" class="spinner-container hidden">
@@ -89,7 +101,7 @@
         </main>
 
         <footer>
-            <p>&copy; 2026 PokéMatch. Data from <a href="https://pokeapi.co/" target="_blank">PokéAPI</a></p>
+            <p>&copy; 2024 PokéMatch. Data from <a href="https://pokeapi.co/" target="_blank">PokéAPI</a></p>
         </footer>
     </div>
 
