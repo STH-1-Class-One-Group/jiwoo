@@ -36,7 +36,8 @@ searchBtn.addEventListener('click', async () => {
         const typeData = await Promise.all(typeResponse.map(res => res.json()))
 
         //배울을 담을 딕셔너리 생성
-        const damageSum = {}; 
+        const damageSumfrom = {}; 
+        const damageSumto = {};
 
 
         typeData.forEach(Intype => {
@@ -48,36 +49,75 @@ searchBtn.addEventListener('click', async () => {
             // 안에 있으면 안에 있는 내용에서 곱해짐
             damage_cal.double_damage_from.forEach(t => {
                 // 이미 바구니에 점수가 있으면 곱하고, 없으면 1에다가 2를 곱함
-                damageSum[t.name] = (damageSum[t.name] || 1) * 2;
+                damageSumto[t.name] = (damageSumto[t.name] || 1) * 2;
             });
 
             // 데미지 X0.5
             damage_cal.half_damage_from.forEach(t => {
-                damageSum[t.name] = (damageSum[t.name] || 1) * 0.5;
+                damageSumto[t.name] = (damageSumto[t.name] || 1) * 0.5;
             });
 
             // 노데미지
             damage_cal.no_damage_from.forEach(t => {
-                damageSum[t.name] = 0; // 무효는 무조건 0!
+                damageSumto[t.name] = 0; // 무효는 무조건 0!
+            });
+            
+            damage_cal.double_damage_to.forEach(t => {
+                damageSumto[t.name] = (damageSumto[t.name] || 1)*2
+            });
+
+            damage_cal.half_damage_to.forEach(t => {
+                damageSumto[t.name] = (damageSumto[t.name]||1) * 0.5;
+            })
+
+            damage_cal.no_damage_to.forEach(t => {
+                damagesumto[t.name] = 0;
             });
         });
+        //방어할 때
         //취약 
-        const weak = []
+        const weak_from = []
         //저항
-        const resist = []
-
+        const resist_from = []
+        //무효
+        const nullity_from = []
+        
         //객체를 배열로 수정
         //반복문을 통해 
-        for (const [type, num] of Object.entries(damageSum)){
+        for (const [type, num] of Object.entries(damageSumfrom)){
             if(num >1){
-                weak.push(`${type}`)
+                weak_from.push(`${type}`)
             }
             if(num < 1 ){
-                resist.push(`${type}`)
+                resist_from.push(`${type}`)
             }
-            
-
+            if(num=1){
+                nullity_from.push(`${type}`)
+            }
         }
+
+        //공격을 할 때 
+        //취약
+        const weak_to = []
+        //저항
+        const resist_to = []
+        //무효
+        const nullity_to = []
+
+        for (const [type, num] of Object.entries(damageSumto)){
+            if(num >1){
+                weak_to.push(`${type}`)
+            }
+            if(num < 1 ){
+                resist_to.push(`${type}`)
+            }
+            if(num=1){
+                nullity_to.push(`${type}`)
+            }
+        }
+        
+
+        for (const [type, num] of Object.enr) 
         resisttype.textContent = `저항 - ${resist.join(', ')}`;
         weaktype.textContent = `취약 - ${weak.join(', ')}`;
 
