@@ -77,9 +77,9 @@ async function fetchAndRender(actualId) {
  */
 function renderPokemonInfo(data) {
     // 고퀄리티 공식 아트워크를 사용하며, 없으면 기본 스프라이트를 사용합니다.
-    pokeSprite.src = data.sprites.other['official-artwork'].front_default || data.sprites.front_default;
+    // pokeSprite.src = data.sprites.other['official-artwork'].front_default || data.sprites.front_default;
     // 공식 아트워크 대신 움짤로 변경 (요청에 따라), 없으면 기본 스프라이트를 사용합니다
-    // pokeSprite.src = data.sprites.other['showdown'].front_default || data.sprites.front_default;
+    pokeSprite.src = data.sprites.other['showdown'].front_default || data.sprites.front_default;
 
     pokeId.textContent = `#${data.id.toString().padStart(3, '0')}`; // ID를 #001 형식으로 포맷팅
     pokeName.textContent = data.name; // 이름 설정
