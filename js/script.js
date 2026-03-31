@@ -1,224 +1,427 @@
 /**
  * PokéMatch - 다국어 포켓몬 상성 검색 앱
- * 이 스크립트는 PokéAPI와 상호작용하여 데이터를 가져오고, 타입 상성을 계산하며,
- * 한국어와 영어 간의 전환을 지원합니다.
+ * PokeAPI 지원 13개 언어 전환, 포켓몬 이름/타입 지역화,
+ * 비영어 이름 검색, kong-api 연동을 모두 지원합니다.
  */
 
 // --- DOM 요소 참조 ---
-// 각 변수는 index.html의 요소를 참조하여 이후 코드에서 쉽게 조작할 수 있도록 합니다.
-const searchInput = document.getElementById('pokemon-search'); // 사용자가 포켓몬 이름이나 ID를 입력하는 텍스트 입력창
-const searchBtn = document.getElementById('search-btn'); // 입력창 옆의 '검색' 버튼
-const resultContainer = document.getElementById('result-container'); // 포켓몬을 성공적으로 찾았을 때 나타나는 메인 결과 섹션
-const loadingSpinner = document.getElementById('loading-spinner'); // 데이터를 가져오는 동안 표시되는 로딩 애니메이션
-const errorMessage = document.getElementById('error-message'); // 포켓몬을 찾지 못했을 때 표시되는 에러 블록
+const searchInput = document.getElementById('pokemon-search');
+const searchBtn = document.getElementById('search-btn');
+const resultContainer = document.getElementById('result-container');
+const loadingSpinner = document.getElementById('loading-spinner');
+const errorMessage = document.getElementById('error-message');
+const pokeSprite = document.getElementById('pokemon-sprite');
+const pokeId = document.getElementById('pokemon-id');
+const pokeName = document.getElementById('pokemon-name');
+const pokeTypes = document.getElementById('pokemon-types');
+const langSelect = document.getElementById('lang-select');
 
-const pokeSprite = document.getElementById('pokemon-sprite'); // 포켓몬의 공식 아트워크를 표시하는 <img> 태그
-const pokeId = document.getElementById('pokemon-id'); // 도감 번호를 표시하는 스팬 (예: #025)
-const pokeName = document.getElementById('pokemon-name'); // 포켓몬의 이름을 표시하는 h2 (언어 설정에 따름)
-const pokeTypes = document.getElementById('pokemon-types'); // 타입 배지들이 삽입될 컨테이너
+// --- 상태 변수 ---
+let currentLang = 'ko'; // 현재 선택된 언어
+let lastSearchedId = null; // 언어 전환 시 재렌더링을 위한 마지막 검색 ID
 
-const weaknessList = document.getElementById('higher-damage-taken-list'); // 포켓몬이 받는 데미지가 높은 타입 (> 1배 피해) 그리드
-const resistanceList = document.getElementById('lower-damage-taken-list'); // 포켓몬이 받는 데미지가 낮은 타입 (< 1배 피해) 그리드
-const immunityList = document.getElementById('no-damage-taken-list'); // 포켓몬이 받는 데미지가 없는 타입 (0배 피해) 그리드
-const weaknessListTo = document.getElementById('higher-damage-given-list'); // 포켓몬이 주는 데미지가 높은 타입 (> 1배 피해) 그리드
-const resistanceListTo = document.getElementById('lower-damage-given-list'); // 포켓몬이 주는 데미지가 낮은 타입 (< 1배 피해) 그리드
-const immunityListTo = document.getElementById('no-damage-given-list'); // 포켓몬이 주는 데미지가 없는 타입 (0배 피해) 그리드
+// --- 타입 이름 번역 캐시 ---
+// ko, en은 빠른 응답을 위해 하드코딩, 나머지 언어는 API에서 동적 로딩 후 캐시
+const typeNameCache = {
+    ko: {
+        normal: '노말', fire: '불꽃', water: '물', electric: '전기', grass: '풀', ice: '얼음',
+        fighting: '격투', poison: '독', ground: '땅', flying: '비행', psychic: '에스퍼',
+        bug: '벌레', rock: '바위', ghost: '고스트', dragon: '드래곤', dark: '악', steel: '강철', fairy: '페어리'
+    },
+    en: {
+        normal: 'Normal', fire: 'Fire', water: 'Water', electric: 'Electric', grass: 'Grass', ice: 'Ice',
+        fighting: 'Fighting', poison: 'Poison', ground: 'Ground', flying: 'Flying', psychic: 'Psychic',
+        bug: 'Bug', rock: 'Rock', ghost: 'Ghost', dragon: 'Dragon', dark: 'Dark', steel: 'Steel', fairy: 'Fairy'
+    }
+};
+const ALL_TYPE_KEYS = ['normal','fire','water','electric','grass','ice','fighting','poison','ground','flying','psychic','bug','rock','ghost','dragon','dark','steel','fairy'];
+let typeNames = typeNameCache['ko']; // 현재 언어의 타입 이름 참조
 
-
-
-// 타입 이름 데이터. 매번 API에서 가져오면 느리기 때문에 상수로 정의합니다.
-const typeNames = {
-    normal: 'Normal', fire: 'Fire', water: 'Water', electric: 'Electric', grass: 'Grass', ice: 'Ice',
-    fighting: 'Fighting', poison: 'Poison', ground: 'Ground', flying: 'Flying', psychic: 'Psychic',
-    bug: 'Bug', rock: 'Rock', ghost: 'Ghost', dragon: 'Dragon', dark: 'Dark', steel: 'Steel', fairy: 'Fairy'
+// --- UI 문자열 번역 ---
+// ko, en만 하드코딩. 그 외 언어는 en 폴백
+const UI_STRINGS = {
+    ko: {
+        subtitle: '포켓몬의 이름 또는 번호를 검색하여 상성을 확인하세요.',
+        placeholder: '포켓몬 이름 또는 ID...',
+        search: '검색',
+        loading: '포켓몬 데이터를 불러오는 중...',
+        error: '포켓몬을 찾을 수 없습니다. 철자를 확인해 주세요.',
+        defendTitle: '방어 시 타입 상성',
+        attackTitle: '공격 시 타입 상성',
+        higherDmgTaken: '받는 데미지 증가',
+        lowerDmgTaken: '받는 데미지 감소',
+        noDmgTaken: '데미지 무효',
+        higherDmgGiven: '주는 데미지 증가',
+        lowerDmgGiven: '주는 데미지 감소',
+        noDmgGiven: '공격 데미지 무효',
+    },
+    en: {
+        subtitle: 'Search by name or number to check type matchups.',
+        placeholder: 'Pokémon name or ID...',
+        search: 'Search',
+        loading: 'Fetching Pokémon data...',
+        error: 'Pokémon not found. Please check the spelling.',
+        defendTitle: 'Defending Type Effectiveness',
+        attackTitle: 'Attacking Type Effectiveness',
+        higherDmgTaken: 'Higher Damage Taken',
+        lowerDmgTaken: 'Lower Damage Taken',
+        noDmgTaken: 'No Damage Taken',
+        higherDmgGiven: 'Higher Damage Given',
+        lowerDmgGiven: 'Lower Damage Given',
+        noDmgGiven: 'No Damage Given',
+    }
 };
 
+/** 현재 언어의 UI 문자열을 가져옵니다. 없으면 영어로 폴백합니다. */
+function getUIString(key) {
+    const strings = UI_STRINGS[currentLang] || UI_STRINGS['en'];
+    return strings[key] || UI_STRINGS['en'][key] || key;
+}
 
-/**
- * 이름/ID 를 모두 처리하는 메인 검색 로직입니다.
- */
-async function searchPokemon() {
-    let query = searchInput.value.toLowerCase().trim(); // 사용자의 입력을 정규화(소문자화, 공백 제거)합니다.
-    if (!query) return;
 
-    showLoading(true); // 로딩 UI를 표시합니다.
-    hideAllSections(); // 이전 결과나 에러를 숨깁니다.
+// =========================================================
+//  타입 이름 로딩 (ko/en 외 언어는 PokeAPI type 엔드포인트에서 fetch)
+// =========================================================
 
-    try {
-        let targetId = query; // 일단 입력값을 타겟 ID로 가정합니다 (ID나 영어 이름의 경우)
+async function loadTypeNames(lang) {
+    if (typeNameCache[lang]) {
+        typeNames = typeNameCache[lang];
+        return;
+    }
 
-        // 찾은 ID로 데이터를 가져와 화면에 보여줍니다.
-        await fetchAndRender(targetId);
-    } catch (error) {
-        console.error(error);
-        errorMessage.classList.remove('hidden'); // 에러 발생 시 에러 메시지 UI 노출
-    } finally {
-        showLoading(false); // 성공 여부와 관계없이 로딩 UI 해제
+    // API에서 18개 타입의 지역화 이름을 병렬로 가져옵니다
+    const names = {};
+    const promises = ALL_TYPE_KEYS.map(async (type) => {
+        try {
+            const resp = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
+            const data = await resp.json();
+            const localized = data.names.find(n => n.language.name === lang);
+            names[type] = localized ? localized.name : typeNameCache['en'][type]; // 없으면 영어 폴백
+        } catch {
+            names[type] = typeNameCache['en'][type];
+        }
+    });
+    await Promise.all(promises);
+    typeNameCache[lang] = names;
+    typeNames = names;
+}
+
+
+// =========================================================
+//  언어 전환
+// =========================================================
+
+async function setLanguage(lang) {
+    if (currentLang === lang) return;
+    currentLang = lang;
+
+    // UI 문자열 업데이트
+    document.getElementById('app-subtitle').textContent = getUIString('subtitle');
+    searchInput.placeholder = getUIString('placeholder');
+    searchBtn.textContent = getUIString('search');
+    loadingSpinner.querySelector('p').textContent = getUIString('loading');
+    errorMessage.querySelector('p').textContent = getUIString('error');
+
+    // 섹션 타이틀 업데이트
+    updateSectionTitles();
+
+    // 타입 이름 로딩 (캐시에 있으면 즉시, 없으면 API fetch)
+    await loadTypeNames(lang);
+
+    // 현재 포켓몬이 표시 중이면 새 언어로 재렌더링 (kong 모드 제외)
+    if (lastSearchedId && !document.querySelector('.kong-stats-panel')) {
+        showLoading(true);
+        try {
+            await fetchAndRender(lastSearchedId);
+        } catch (e) {
+            console.error(e);
+        }
+        showLoading(false);
+    }
+}
+
+/** matchup 섹션의 h3/h4 타이틀을 현재 언어로 업데이트합니다. kong 모드일 때는 무시합니다. */
+function updateSectionTitles() {
+    const titleMap = {
+        'title-weak-from': 'higherDmgTaken',
+        'title-resist-from': 'lowerDmgTaken',
+        'title-immune-from': 'noDmgTaken',
+        'title-weak-to': 'higherDmgGiven',
+        'title-resist-to': 'lowerDmgGiven',
+        'title-immune-to': 'noDmgGiven',
+    };
+    for (const [id, key] of Object.entries(titleMap)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = getUIString(key);
+    }
+
+    // matchup-wrapper의 h3 (방어/공격 제목)
+    const wrappers = document.querySelectorAll('.matchup-wrapper > h3');
+    if (wrappers.length >= 2) {
+        wrappers[0].textContent = getUIString('defendTitle');
+        wrappers[1].textContent = getUIString('attackTitle');
     }
 }
 
 
-/**
- * 데이터를 가져와 UI에 렌더링하는 통합 기능입니다.
- */
+// =========================================================
+//  포켓몬 검색
+// =========================================================
+
+async function searchPokemon() {
+    const rawQuery = searchInput.value.trim();
+    if (!rawQuery) return;
+
+    let query = rawQuery.toLowerCase().trim();
+    if (!query) return;
+
+    showLoading(true);
+    hideAllSections();
+
+    try {
+        let targetId = query;
+
+        // 비ASCII 문자(한글, 한자, 가나 등) 입력 감지 → 지역화 이름 검색
+        if (/[^\x00-\x7F]/.test(query)) {
+            const speciesId = await findIdByLocalizedName(query);
+            if (!speciesId) throw new Error('Pokemon not found by localized name');
+            targetId = speciesId;
+        }
+
+        await fetchAndRender(targetId);
+    } catch (error) {
+        console.error(error);
+        errorMessage.classList.remove('hidden');
+    } finally {
+        showLoading(false);
+    }
+}
+
+
+// =========================================================
+//  지역화 이름 → ID 검색 (PokeAPI species에서 batch 병렬 탐색)
+// =========================================================
+
+async function findIdByLocalizedName(name) {
+    // 1. 세션 캐시 확인 (이전에 같은 이름을 검색한 적이 있는지)
+    const cacheKey = `pokeName_${name}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) return parseInt(cached);
+
+    try {
+        // 2. 전체 종 리스트를 가져옵니다
+        const response = await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=1025');
+        const data = await response.json();
+
+        // 3. 10개씩 병렬 배치로 탐색 (순차 대비 ~10배 빠름)
+        const BATCH_SIZE = 10;
+        for (let batchStart = 0; batchStart < data.results.length; batchStart += BATCH_SIZE) {
+            const batch = data.results.slice(batchStart, batchStart + BATCH_SIZE);
+
+            const results = await Promise.all(batch.map(async (species) => {
+                try {
+                    const sResp = await fetch(species.url);
+                    const sData = await sResp.json();
+                    // 모든 언어의 이름을 확인
+                    const match = sData.names.find(n => n.name.toLowerCase() === name.toLowerCase());
+                    return match ? sData.id : null;
+                } catch {
+                    return null;
+                }
+            }));
+
+            const foundId = results.find(r => r !== null);
+            if (foundId) {
+                sessionStorage.setItem(cacheKey, foundId.toString());
+                return foundId;
+            }
+        }
+    } catch (e) {
+        console.error('Localized name search error:', e);
+    }
+    return null;
+}
+
+
+// =========================================================
+//  데이터 fetch & 렌더링
+// =========================================================
+
 async function fetchAndRender(actualId) {
-    // 1. 포켓몬 기본 데이터(이름, 타입, 이미지 등)를 가져옵니다.
-    const pResp = await fetch(`https://pokeapi.co/api/v2/pokemon/${actualId}`);
-    if (!pResp.ok) throw new Error('Not found');
+    // 1. Species 데이터 → 지역화된 이름 획득
+    const sResp = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${actualId}`);
+    if (!sResp.ok) throw new Error('Not found');
+    const sData = await sResp.json();
+
+    const resolvedId = sData.id;
+    lastSearchedId = resolvedId; // 언어 전환 시 재렌더링용
+
+    // 2. Pokemon 데이터 → 스프라이트, 타입
+    const pResp = await fetch(`https://pokeapi.co/api/v2/pokemon/${resolvedId}`);
     const pData = await pResp.json();
 
-    // 2. 기본 정보(이름, 이미지)를 먼저 화면에 그립니다.
-    renderPokemonInfo(pData); 
+    // 3. 현재 언어에 맞는 이름 찾기 (없으면 영어 이름 폴백)
+    const localizedName = sData.names.find(n => n.language.name === currentLang)?.name || pData.name;
 
-    // 3. [중요] 상성 정보를 계산합니다. 
-    // API 호출이 포함되어 있으므로 완료될 때까지 await로 기다립니다.
+    // 4. 렌더링
+    renderPokemonInfo(pData, localizedName);
     await calculateTypeEffectiveness(pData);
 
-    // 4. 모든 데이터가 준비되면 결과 컨테이너를 보여줍니다.
     resultContainer.classList.remove('hidden');
 }
 
-/**
- * 포켓몬 상성 계산 로직 (중복 제거 및 최적화 버전)
- */
-async function calculateTypeEffectiveness(data) {
-    // 포켓몬이 가진 타입들의 상세 정보 URL 배열을 만듭니다. (예: ['.../type/12/', '.../type/4/'])
-    const typeURLs = data.types.map(item => item.type.url);
 
-    // [비동기 학습 포인트] 모든 타입 정보를 병렬로 가져옵니다.
-    // 1단계: 각 URL에 대해 fetch를 실행하여 Response 객체 배열을 얻습니다.
+// =========================================================
+//  포켓몬 정보 렌더링 (지역화 대응)
+// =========================================================
+
+function renderPokemonInfo(data, localizedName) {
+    // 움짤 스프라이트 우선, 없으면 기본 스프라이트
+    pokeSprite.src = data.sprites.other['showdown'].front_default || data.sprites.front_default;
+    pokeId.textContent = `#${data.id.toString().padStart(3, '0')}`;
+    pokeName.textContent = localizedName || data.name;
+
+    pokeTypes.innerHTML = '';
+    data.types.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'type-badge';
+        span.style.backgroundColor = `var(--type-${t.type.name})`;
+        span.textContent = typeNames[t.type.name] || t.type.name; // 지역화된 타입 이름
+        pokeTypes.appendChild(span);
+    });
+}
+
+
+// =========================================================
+//  상성 계산 (현재 버전과 동일, 타입 이름만 지역화)
+// =========================================================
+
+async function calculateTypeEffectiveness(data) {
+    const typeURLs = data.types.map(item => item.type.url);
     const typeResponses = await Promise.all(typeURLs.map(url => fetch(url)));
-    // 2단계: 각 Response를 JSON으로 변환하여 실제 데이터 배열을 얻습니다.
     const typeDataArray = await Promise.all(typeResponses.map(res => res.json()));
 
-    // 상성 배율을 저장할 객체 (key: 타입이름, value: 배율)
-    // defenseMultipliers: 방어 시(내가 맞을 때) 받는 피해량
-    // attackMultipliers: 공격 시(내가 때릴 때) 주는 피해량
     const defenseMultipliers = {};
     const attackMultipliers = {};
 
-    // API에서 가져온 각 타입의 상성 데이터를 순회하며 계산합니다.
     typeDataArray.forEach(typeData => {
         const damage = typeData.damage_relations;
-
-        // --- 방어 상성 계산 (Double/Half/No damage 'FROM') ---
-        // 나에게 2배 피해를 주는 타입들
-        damage.double_damage_from.forEach(t => {
-            defenseMultipliers[t.name] = (defenseMultipliers[t.name] || 1) * 2;
-        });
-        // 나에게 0.5배 피해를 주는 타입들
-        damage.half_damage_from.forEach(t => {
-            defenseMultipliers[t.name] = (defenseMultipliers[t.name] || 1) * 0.5;
-        });
-        // 나에게 피해를 주지 못하는 타입들
-        damage.no_damage_from.forEach(t => {
-            defenseMultipliers[t.name] = 0; 
-        });
-
-        // --- 공격 상성 계산 (Double/Half/No damage 'TO') ---
-        // 내가 2배 피해를 입히는 타입들
-        damage.double_damage_to.forEach(t => {
-            attackMultipliers[t.name] = (attackMultipliers[t.name] || 1) * 2;
-        });
-        // 내가 0.5배 피해를 입히는 타입들
-        damage.half_damage_to.forEach(t => {
-            attackMultipliers[t.name] = (attackMultipliers[t.name] || 1) * 0.5;
-        });
-        // 내가 피해를 입히지 못하는 타입들
-        damage.no_damage_to.forEach(t => {
-            attackMultipliers[t.name] = 0;
-        });
+        damage.double_damage_from.forEach(t => { defenseMultipliers[t.name] = (defenseMultipliers[t.name] || 1) * 2; });
+        damage.half_damage_from.forEach(t => { defenseMultipliers[t.name] = (defenseMultipliers[t.name] || 1) * 0.5; });
+        damage.no_damage_from.forEach(t => { defenseMultipliers[t.name] = 0; });
+        damage.double_damage_to.forEach(t => { attackMultipliers[t.name] = (attackMultipliers[t.name] || 1) * 2; });
+        damage.half_damage_to.forEach(t => { attackMultipliers[t.name] = (attackMultipliers[t.name] || 1) * 0.5; });
+        damage.no_damage_to.forEach(t => { attackMultipliers[t.name] = 0; });
     });
 
-    // 화면에 결과를 뿌려주는 헬퍼 함수 호출
-    // --- [방어] 내가 공격을 받을 때 (From) ---
-    // 1. 취약: 받는 데미지 > 1배
     displayEffectiveness('higher-damage-taken-list', defenseMultipliers, (n) => n > 1);
-    // 2. 저항: 0 < 받는 데미지 < 1배
     displayEffectiveness('lower-damage-taken-list', defenseMultipliers, (n) => n < 1 && n > 0);
-    // 3. 무효: 받는 데미지 = 0
     displayEffectiveness('no-damage-taken-list', defenseMultipliers, (n) => n === 0);
-
-    // --- [공격] 내가 공격을 할 때 (To) ---
-    // 4. 효과가 굉장함: 주는 데미지 > 1배
     displayEffectiveness('higher-damage-given-list', attackMultipliers, (n) => n > 1);
-    // 5. 효과가 별로임: 0 < 주는 데미지 < 1배
     displayEffectiveness('lower-damage-given-list', attackMultipliers, (n) => n < 1 && n > 0);
-    // 6. 효과가 없음: 주는 데미지 = 0
     displayEffectiveness('no-damage-given-list', attackMultipliers, (n) => n === 0);
 }
 
-/**
- * 계산된 상성 결과를 HTML에 삽입하는 공통 함수
- * @param {string} containerId - 데이터를 넣을 요소의 ID
- * @param {object} multipliers - 계산된 배율 객체
- * @param {function} filterFn - 어떤 배율을 통과시킬지 결정하는 조건 함수
- */
 function displayEffectiveness(containerId, multipliers, filterFn) {
     const container = document.getElementById(containerId);
-    
-    // [추가] 만약 해당 ID를 가진 HTML 요소가 없으면 함수를 종료해라!
-    if (!container) return; 
-    
-    container.innerHTML = ''; // 기존 내용 초기화
+    if (!container) return;
+    container.innerHTML = '';
 
-    // 객체의 [키, 값] 쌍을 배열로 변환하여 순회합니다.
     Object.entries(multipliers).forEach(([type, factor]) => {
         if (filterFn(factor)) {
             const span = document.createElement('span');
             span.className = 'type-badge';
             span.style.backgroundColor = `var(--type-${type})`;
-            // 4배나 0.25배 같은 복합 상성일 경우 배율을 함께 표시해줍니다.
-            span.textContent = `${typeNames[type] || type} x${factor}`;
+            span.textContent = `${typeNames[type] || type} x${factor}`; // 지역화된 타입 이름 + 배율
             container.appendChild(span);
         }
     });
 }
 
-/**
- * 포켓몬의 기본 정보를 결과 카드에 표시합니다.
- */
-function renderPokemonInfo(data) {
-    // 고퀄리티 공식 아트워크를 사용하며, 없으면 기본 스프라이트를 사용합니다.
-    // pokeSprite.src = data.sprites.other['official-artwork'].front_default || data.sprites.front_default;
-    // 공식 아트워크 대신 움짤로 변경 (요청에 따라), 없으면 기본 스프라이트를 사용합니다
-    pokeSprite.src = data.sprites.other['showdown'].front_default || data.sprites.front_default;
 
-    pokeId.textContent = `#${data.id.toString().padStart(3, '0')}`; // ID를 #001 형식으로 포맷팅
-    pokeName.textContent = data.name; // 이름 설정
+// =========================================================
+//  유틸리티
+// =========================================================
 
-    pokeTypes.innerHTML = ''; // 기존의 타입 배지들을 비웁니다.
-    data.types.forEach(t => {
-        const span = document.createElement('span'); // 각 타입을 위한 스팬 생성
-        span.className = `type-badge`; // 공용 배지 스타일 적용
-        span.style.backgroundColor = `var(--type-${t.type.name})`; // CSS 변수를 사용해 타입 색상 지정
-        span.textContent = typeNames[t.type.name]; // 타입 텍스트 설정
-        pokeTypes.appendChild(span); // 컨테이너에 배지 추가
-    });
-}
-
-
-
-
-
-
-/** 로딩 스피너 표시 여부를 전환하는 유틸리티입니다. */
 function showLoading(show) {
     loadingSpinner.classList.toggle('hidden', !show);
 }
 
-/** 결과 및 에러 블록을 숨기는 유틸리티입니다. */
 function hideAllSections() {
     resultContainer.classList.add('hidden');
     errorMessage.classList.add('hidden');
+<<<<<<< HEAD
+=======
+    restoreMatchupSection();
+}
+
+/** kong 검색 후 일반 검색으로 돌아올 때 matchup 섹션을 원래 HTML로 복원합니다. */
+function restoreMatchupSection() {
+    const matchupSection = document.querySelector('.matchup-section');
+    if (matchupSection && (matchupSection.querySelector('.kong-stats-panel') || matchupSection.querySelector('.kong-message'))) {
+        matchupSection.innerHTML = `
+            <div class="matchup-wrapper">
+                <h3>${getUIString('defendTitle')}</h3>
+                <div class="effectiveness-grid">
+                    <div class="effectiveness-card glass" id="weak-from">
+                        <h4 id="title-weak-from">${getUIString('higherDmgTaken')}</h4>
+                        <div class="type-grid" id="higher-damage-taken-list"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="resistant-from">
+                        <h4 id="title-resist-from">${getUIString('lowerDmgTaken')}</h4>
+                        <div class="type-grid" id="lower-damage-taken-list"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="immune-from">
+                        <h4 id="title-immune-from">${getUIString('noDmgTaken')}</h4>
+                        <div class="type-grid" id="no-damage-taken-list"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="matchup-wrapper">
+                <h3>${getUIString('attackTitle')}</h3>
+                <div class="effectiveness-grid">
+                    <div class="effectiveness-card glass" id="weak-to">
+                        <h4 id="title-weak-to">${getUIString('higherDmgGiven')}</h4>
+                        <div class="type-grid" id="higher-damage-given-list"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="resistant-to">
+                        <h4 id="title-resist-to">${getUIString('lowerDmgGiven')}</h4>
+                        <div class="type-grid" id="lower-damage-given-list"></div>
+                    </div>
+                    <div class="effectiveness-card glass" id="immune-to">
+                        <h4 id="title-immune-to">${getUIString('noDmgGiven')}</h4>
+                        <div class="type-grid" id="no-damage-given-list"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+>>>>>>> 8adf4a6 (다국어 지원)
 }
 
 
-// --- 이벤트 리스너 및 초기 설정 ---
-// 검색 버튼 클릭 이벤트 리스너 등록
-searchBtn.addEventListener('click', searchPokemon);
+// =========================================================
+//  이벤트 리스너 & 초기화
+// =========================================================
 
-// 검색창 내 엔터 키 입력 리스너 등록
+searchBtn.addEventListener('click', searchPokemon);
 searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') searchPokemon();
 });
+
+// 언어 선택 변경 이벤트
+langSelect.addEventListener('change', (e) => {
+    setLanguage(e.target.value);
+});
+
+// 초기 설정: 기본 언어 ko로 모든 UI 세팅
+(async function init() {
+    currentLang = langSelect.value; // HTML에서 selected된 값 (ko)
+    await loadTypeNames(currentLang);
+
+    // UI 문자열 초기 세팅
+    document.getElementById('app-subtitle').textContent = getUIString('subtitle');
+    searchInput.placeholder = getUIString('placeholder');
+    searchBtn.textContent = getUIString('search');
+    updateSectionTitles();
+})();

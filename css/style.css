@@ -94,29 +94,46 @@ header {
 .lang-selector {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
 }
 
-.lang-btn {
+.lang-select {
     background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
-    color: var(--text-muted);
-    padding: 0.4rem 0.8rem;
-    border-radius: 10px;
-    font-size: 0.8rem;
+    color: var(--text-light);
+    padding: 0.55rem 1.2rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-family: 'Inter', sans-serif;
     cursor: pointer;
+    outline: none;
     transition: all 0.2s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    padding-right: 2.2rem;
 }
 
-.lang-btn.active {
-    background: var(--primary-color);
-    color: white;
+.lang-select:hover {
     border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(255, 83, 80, 0.3);
 }
 
-.lang-btn:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.1);
+.lang-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 12px rgba(255, 83, 80, 0.4);
+}
+
+.lang-select option {
+    background: #1e293b;
+    color: var(--text-light);
+    padding: 0.5rem;
 }
 
 .main-title {
@@ -392,5 +409,129 @@ footer a {
 
     .type-badge-container {
         justify-content: center;
+    }
+}
+
+/* ===== kong-api 전용 스타일 ===== */
+.kong-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    font-size: 0.95rem !important;
+    text-transform: none !important;
+    letter-spacing: 0.02em;
+    border: 1px solid rgba(255, 220, 100, 0.4);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+/* 스탯 패널 전체 래퍼 */
+.kong-stats-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* 무기 / 약점 카드 나란히 */
+.kong-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+}
+
+.kong-stat-card {
+    padding: 1.8rem 2rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kong-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.kong-stat-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+
+.kong-stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fbbf24;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+}
+
+/* 어록 카드 */
+.kong-quote {
+    padding: 2rem 2.5rem;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    text-align: center;
+}
+
+.kong-quote-mark {
+    font-family: 'Outfit', serif;
+    font-size: 4rem;
+    color: #f59e0b;
+    opacity: 0.5;
+    line-height: 1;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 0.5rem;
+}
+
+.kong-quote-text {
+    display: inline;
+    font-size: 1.25rem;
+    font-style: italic;
+    color: var(--text-light);
+    font-weight: 500;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+}
+
+/* 메시지 + 경고 박스 */
+.kong-message {
+    padding: 2rem 2.5rem;
+    text-align: center;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.kong-message p {
+    margin-bottom: 0.5rem;
+}
+
+.kong-sub {
+    font-size: 1.3rem;
+    color: #fbbf24;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.01em;
+}
+
+.kong-warning {
+    font-size: 2.2rem;
+    color: #ef4444;
+    font-weight: bold;
+    margin-top: 1rem;
+    text-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
+    letter-spacing: 0.02em;
+}
+
+/* 반응형 */
+@media (max-width: 600px) {
+    .kong-stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .kong-stat-value {
+        font-size: 1.5rem;
+    }
+
+    .kong-warning {
+        font-size: 1.6rem;
     }
 }
