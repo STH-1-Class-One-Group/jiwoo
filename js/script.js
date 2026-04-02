@@ -350,53 +350,6 @@ function showLoading(show) {
 function hideAllSections() {
     resultContainer.classList.add('hidden');
     errorMessage.classList.add('hidden');
-<<<<<<< HEAD
-=======
-    restoreMatchupSection();
-}
-
-/** kong 검색 후 일반 검색으로 돌아올 때 matchup 섹션을 원래 HTML로 복원합니다. */
-function restoreMatchupSection() {
-    const matchupSection = document.querySelector('.matchup-section');
-    if (matchupSection && (matchupSection.querySelector('.kong-stats-panel') || matchupSection.querySelector('.kong-message'))) {
-        matchupSection.innerHTML = `
-            <div class="matchup-wrapper">
-                <h3>${getUIString('defendTitle')}</h3>
-                <div class="effectiveness-grid">
-                    <div class="effectiveness-card glass" id="weak-from">
-                        <h4 id="title-weak-from">${getUIString('higherDmgTaken')}</h4>
-                        <div class="type-grid" id="higher-damage-taken-list"></div>
-                    </div>
-                    <div class="effectiveness-card glass" id="resistant-from">
-                        <h4 id="title-resist-from">${getUIString('lowerDmgTaken')}</h4>
-                        <div class="type-grid" id="lower-damage-taken-list"></div>
-                    </div>
-                    <div class="effectiveness-card glass" id="immune-from">
-                        <h4 id="title-immune-from">${getUIString('noDmgTaken')}</h4>
-                        <div class="type-grid" id="no-damage-taken-list"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="matchup-wrapper">
-                <h3>${getUIString('attackTitle')}</h3>
-                <div class="effectiveness-grid">
-                    <div class="effectiveness-card glass" id="weak-to">
-                        <h4 id="title-weak-to">${getUIString('higherDmgGiven')}</h4>
-                        <div class="type-grid" id="higher-damage-given-list"></div>
-                    </div>
-                    <div class="effectiveness-card glass" id="resistant-to">
-                        <h4 id="title-resist-to">${getUIString('lowerDmgGiven')}</h4>
-                        <div class="type-grid" id="lower-damage-given-list"></div>
-                    </div>
-                    <div class="effectiveness-card glass" id="immune-to">
-                        <h4 id="title-immune-to">${getUIString('noDmgGiven')}</h4>
-                        <div class="type-grid" id="no-damage-given-list"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
->>>>>>> 8adf4a6 (다국어 지원)
 }
 
 
@@ -404,9 +357,16 @@ function restoreMatchupSection() {
 //  이벤트 리스너 & 초기화
 // =========================================================
 
-searchBtn.addEventListener('click', searchPokemon);
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') searchPokemon();
+searchBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    searchPokemon();
+});
+
+searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        searchPokemon();
+    }
 });
 
 // 언어 선택 변경 이벤트
